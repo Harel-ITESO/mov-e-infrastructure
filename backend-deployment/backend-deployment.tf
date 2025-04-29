@@ -93,8 +93,8 @@ resource "aws_instance" "ec2_instances" {
     docker pull ${var.ECR_IMAGE}
 
     cat <<EOT >> /home/ec2-user/.env
-REDIS_CACHE_URL=redis://:${var.REDIS_CACHE_PASSWORD}@${var.REDIS_CACHE_ENDPOINT}:6379/0
-REDIS_SESSION_URL=redis://:${var.REDIS_SESSION_PASSWORD}@${var.REDIS_SESSION_ENDPOINT}:6379/0
+REDIS_CACHE_URL=rediss://:${var.REDIS_CACHE_PASSWORD}@${var.REDIS_CACHE_ENDPOINT}:6379/0
+REDIS_SESSION_URL=rediss://:${var.REDIS_SESSION_PASSWORD}@${var.REDIS_SESSION_ENDPOINT}:6379/0
 DATABASE_URL=postgres://${var.DB_USER}:${var.DB_PASSWORD}@${var.DB_ENDPOINT}/${var.DB_NAME}
 TMDB_API_KEY=${var.TMDB_API_KEY}
 COOKIE_SECRET=${var.COOKIE_SECRET}
@@ -112,7 +112,7 @@ SMTP_NAME=${var.SMTP_NAME}
 SMTP_EMAIL=${var.SMTP_EMAIL}
 EOT
 
-    docker run -d --restart always \
+    docker run --restart always \
       -p ${var.APP_PORT}:${var.CONTAINER_PORT} \
       --env-file /home/ec2-user/.env \
       ${var.ECR_IMAGE}

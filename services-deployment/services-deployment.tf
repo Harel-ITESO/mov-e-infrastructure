@@ -36,6 +36,21 @@ locals {
 }
 
 # redis clusters
+resource "aws_security_group" "redis_sg" {
+  ingress {
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_elasticache_subnet_group" "redis_subnet_group" {
   name       = "redis-subnet-group"
   subnet_ids = var.SUBNETS
@@ -43,6 +58,7 @@ resource "aws_elasticache_subnet_group" "redis_subnet_group" {
 
 resource "aws_elasticache_replication_group" "redis" {
   count = length(local.redis_clusters)
+  security_group_ids            = [aws_security_group.redis_sg.id]
   replication_group_id          = local.redis_clusters[count.index].id
   description                   = local.redis_clusters[count.index].description
   node_type                     = "cache.t3.micro"
