@@ -3,22 +3,25 @@ variable "SUBNETS" {}
 variable "DB_NAME" {}
 variable "DB_USER" {}
 variable "DB_PASSWORD" {}
+variable "S3_BUCKET" {}
+variable "REDIS_CACHE_PASSWORD" {}
+variable "REDIS_SESSION_PASSWORD" {}
 
 provider "aws" {
   region = var.REGION
 }
 
 locals {
-  s3_bucket = "my-unique-bucket-name-746284"
-
   redis_clusters = [
     {
       id          = "redis-cluster-1"
       description = "Redis Cluster 1"
+      password    = var.REDIS_CACHE_PASSWORD
     },
     {
       id          = "redis-cluster-2"
       description = "Redis Cluster 2"
+      password    = var.REDIS_SESSION_PASSWORD
     }
   ]
 
@@ -51,8 +54,9 @@ resource "aws_elasticache_replication_group" "redis" {
   multi_az_enabled              = false
   num_node_groups               = 1
   replicas_per_node_group       = 0
-  transit_encryption_enabled    = false
+  transit_encryption_enabled    = true
   at_rest_encryption_enabled    = false
+  auth_token                    = local.redis_clusters[count.index].password
 }
 
 output "redis_endpoints" {
@@ -81,7 +85,7 @@ output "postgres_endpoint" {
 
 # s3 bucket
 resource "aws_s3_bucket" "s3_bucket" {
-  bucket = local.s3_bucket
+  bucket = var.S3_BUCKET
 }
 
 resource "aws_s3_bucket_ownership_controls" "bucket_controls" {
